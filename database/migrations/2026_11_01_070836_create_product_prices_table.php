@@ -12,7 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('product_prices', function (Blueprint $table) {
-            $table->id(); $table->foreignId('product_variant_id')->constrained()->cascadeOnDelete(); $table->string('currency_code', 3); $table->unsignedBigInteger('price_amount'); $table->unsignedBigInteger('compare_at_price_amount')->nullable(); $table->unique(['product_variant_id', 'currency_code']);
+            $table->id(); 
+            $table->foreignId('product_variant_id')->constrained()->cascadeOnDelete(); 
+            $table->string('currency_code', 3); 
+            $table->unsignedBigInteger('price_amount'); 
+            $table->unsignedBigInteger('compare_at_price_amount')->nullable(); 
+            $table->unique(['product_variant_id', 'currency_code']);
             $table->timestamps();
         });
     }

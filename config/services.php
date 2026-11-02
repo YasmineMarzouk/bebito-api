@@ -2,6 +2,11 @@
 
 return [
 
+    'deepl' => [
+        'key' => env('DEEPL_API_KEY'),
+        'url' => env('DEEPL_BASE_URL', 'https://api-free.deepl.com'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services
