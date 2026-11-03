@@ -9,4 +9,6 @@ interface AuthUserRepositoryInterface
     public function findByEmail(string $email): ?User;
 
     public function hasAdministratorRole(User $user): bool;
+
+    public function hasCustomerRole(User $user): bool;
 }

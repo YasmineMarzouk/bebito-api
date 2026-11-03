@@ -16,4 +16,9 @@ final class AuthUserRepository implements AuthUserRepositoryInterface
     {
         return $user->roles()->whereIn('name', ['owner', 'admin'])->exists();
     }
+
+    public function hasCustomerRole(User $user): bool
+    {
+        return $user->roles()->where('name', 'customer')->exists();
+    }
 }

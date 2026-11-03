@@ -1,0 +1,38 @@
+<?php
+
+namespace Modules\Customer\UseCases;
+
+use Modules\Core\Contracts\Services\TransactionManagerInterface;
+use Modules\Customer\Contracts\Repositories\CustomerRepositoryInterface;
+use Modules\Customer\Contracts\Services\CustomerBadgeResolverInterface;
+use Modules\Customer\DTOs\Inputs\UpdateCustomerInput;
+use Modules\Customer\DTOs\Outputs\CustomerOutput;
+use Modules\Customer\Exceptions\CustomerEmailAlreadyExistsException;
+use Modules\Customer\Exceptions\CustomerNotFoundException;
+use Modules\Orders\Contracts\Services\CustomerOrderStatisticsServiceInterface;
+
+final class UpdateCustomerUseCase
+{
+    public function __construct(private readonly CustomerRepositoryInterface $customers, private readonly CustomerOrderStatisticsServiceInterface $orders, private readonly CustomerBadgeResolverInterface $badges, private readonly TransactionManagerInterface $transactions) {}
+
+    public function execute(int $customerId, UpdateCustomerInput $input): CustomerOutput
+    {
+        $customer = $this->customers->find($customerId);
+
+        if ($customer === null) {
+            throw new CustomerNotFoundException;
+        }
+
+        if ($this->customers->emailExists($input->email, $customerId)) {
+            throw new CustomerEmailAlreadyExistsException;
+        }
+
+        return $this->transactions->run(function () use ($customer, $input): CustomerOutput {
+            $customer = $this->customers->update($customer, $input);
+            $profile = $this->customers->profileFor($customer->id);
+            $statistics = $this->orders->forCustomer($customer->id);
+
+            return CustomerOutput::fromModel($customer, $profile, $statistics, $this->badges->resolve($customer, $profile, $statistics));
+        });
+    }
+}
