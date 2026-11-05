@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             StoreDefaultsSeeder::class,
             InitialAdminSeeder::class,
+            StaffAccessSeeder::class,
         ]);
     }
 }

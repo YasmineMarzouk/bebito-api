@@ -12,6 +12,8 @@ class Product extends BaseModel
 {
     protected $fillable = [
         'status',
+        'is_homepage_featured',
+        'homepage_position',
         'gender',
         'sku',
         'price_amount',
@@ -29,6 +31,8 @@ class Product extends BaseModel
             'discount_percentage' => 'float',
             'stock_quantity' => 'integer',
             'low_stock_threshold' => 'integer',
+            'is_homepage_featured' => 'boolean',
+            'homepage_position' => 'integer',
         ];
     }
 

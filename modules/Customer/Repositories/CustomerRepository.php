@@ -4,22 +4,24 @@ namespace Modules\Customer\Repositories;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Modules\Core\Enums\UserTypeEnum;
 use Modules\Core\Models\Role;
 use Modules\Customer\Contracts\Repositories\CustomerRepositoryInterface;
 use Modules\Customer\DTOs\Inputs\CreateCustomerInput;
 use Modules\Customer\DTOs\Inputs\UpdateCustomerInput;
+use Modules\Customer\Models\CustomerChild;
 use Modules\Customer\Models\CustomerProfile;
 
 final class CustomerRepository implements CustomerRepositoryInterface
 {
     public function all(): Collection
     {
-        return User::query()->whereHas('roles', fn ($query) => $query->where('name', 'customer'))->orderByDesc('id')->get();
+        return User::query()->where('user_type', UserTypeEnum::Customer->value)->orderByDesc('id')->get();
     }
 
     public function find(int $id): ?User
     {
-        return User::query()->whereKey($id)->whereHas('roles', fn ($query) => $query->where('name', 'customer'))->first();
+        return User::query()->whereKey($id)->where('user_type', UserTypeEnum::Customer->value)->first();
     }
 
     public function profileFor(int $userId): ?CustomerProfile
@@ -33,8 +35,10 @@ final class CustomerRepository implements CustomerRepositoryInterface
             'name' => $input->name,
             'email' => $input->email,
             'password' => $input->password,
+            'gender' => $input->gender,
+            'user_type' => UserTypeEnum::Customer->value,
         ]);
-        $customerRole = Role::query()->firstOrCreate(['name' => 'customer']);
+        $customerRole = Role::query()->firstOrCreate(['name' => 'customer'], ['title' => 'Customer']);
         $customer->roles()->attach($customerRole->id);
 
         CustomerProfile::query()->create([
@@ -43,7 +47,17 @@ final class CustomerRepository implements CustomerRepositoryInterface
             'preferred_locale_code' => $input->preferredLocaleCode,
             'marketing_opt_in' => $input->marketingOptIn,
             'manual_badge' => $input->manualBadge,
+            'shopping_for' => $input->shoppingFor,
         ]);
+
+        foreach ($input->children as $child) {
+            CustomerChild::query()->create([
+                'user_id' => $customer->id,
+                'name' => $child['name'],
+                'birth_date' => $child['birthDate'],
+                'gender' => $child['gender'],
+            ]);
+        }
 
         return $customer->refresh();
     }

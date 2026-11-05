@@ -12,6 +12,9 @@ interface CollectionRepositoryInterface
     /** @return EloquentCollection<int, Collection> */
     public function all(): EloquentCollection;
 
+    /** @return EloquentCollection<int, Collection> */
+    public function shop(): EloquentCollection;
+
     public function find(int $id): ?Collection;
 
     public function create(CreateCollectionInput $input): Collection;

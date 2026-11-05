@@ -12,6 +12,10 @@ final readonly class CreateCustomerInput
         public string $preferredLocaleCode,
         public bool $marketingOptIn,
         public ?string $manualBadge,
+        public string $shoppingFor,
+        public ?string $gender,
+        /** @var list<array{name: string, birthDate: string, gender: string}> */
+        public array $children,
     ) {}
 
     /** @param array<string, mixed> $data */
@@ -25,6 +29,16 @@ final readonly class CreateCustomerInput
             (string) ($data['preferred_locale_code'] ?? 'fr'),
             (bool) ($data['marketing_opt_in'] ?? false),
             $data['manual_badge'] ?? null,
+            (string) ($data['shopping_for'] ?? 'gift'),
+            $data['gender'] ?? null,
+            array_map(
+                fn (array $child): array => [
+                    'name' => trim((string) $child['name']),
+                    'birthDate' => (string) $child['birth_date'],
+                    'gender' => (string) $child['gender'],
+                ],
+                $data['children'] ?? [],
+            ),
         );
     }
 }

@@ -47,6 +47,7 @@ The non-negotiable rules are:
 4. **Repositories are the only entry point to the database.** No `Model::where()`, `Model::find()`, or `->save()` outside a repository.
 5. **DTOs are dumb.** A DTO holds data and transforms it. It never injects a service, calls the IoC container, or performs I/O.
 6. **PHPStan level 7 is mandatory.** No `@phpstan-ignore`, no suppression. Fix the code.
+7. **Use enums for finite domain values.** User types, statuses, types, badges, permissions, and other fixed sets must use backed enums. Never compare raw text such as `$user->user_type === 'customer'`; use `UserTypeEnum::Customer->value` (or the cast enum case) instead.
 
 ---
 

@@ -11,6 +11,8 @@ final readonly class ProductOutput
     public function __construct(
         public int $id,
         public string $status,
+        public bool $isHomepageFeatured,
+        public ?int $homepagePosition,
         public ?string $gender,
         public ?string $sku,
         public int $priceAmount,
@@ -32,6 +34,8 @@ final readonly class ProductOutput
         return new self(
             id: $product->id,
             status: $product->status,
+            isHomepageFeatured: $product->is_homepage_featured,
+            homepagePosition: $product->homepage_position,
             gender: $product->gender,
             sku: $product->sku,
             priceAmount: $product->price_amount,

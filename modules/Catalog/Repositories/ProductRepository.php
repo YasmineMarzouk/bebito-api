@@ -20,9 +20,71 @@ final class ProductRepository implements ProductRepositoryInterface
         return Product::query()->with($this->relations())->latest('id')->get();
     }
 
+    public function homepage(): Collection
+    {
+        return Product::query()
+            ->with($this->relations())
+            ->where('status', 'published')
+            ->where('is_homepage_featured', true)
+            ->orderBy('homepage_position')
+            ->get();
+    }
+
+    public function shop(?int $collectionId = null, bool $discounted = false): Collection
+    {
+        return Product::query()
+            ->with($this->relations())
+            ->where('status', 'published')
+            ->when($collectionId !== null, fn ($query) => $query->whereHas('collections', fn ($collections) => $collections->whereKey($collectionId)->where('is_active', true)))
+            ->when($discounted, fn ($query) => $query->whereNotNull('discount_percentage')->where('discount_percentage', '>', 0))
+            ->latest('id')
+            ->get();
+    }
+
+    public function findShop(string $identifier): ?Product
+    {
+        return Product::query()
+            ->with($this->relations())
+            ->where('status', 'published')
+            ->where(function ($query) use ($identifier): void {
+                if (ctype_digit($identifier)) {
+                    $query->whereKey((int) $identifier);
+
+                    return;
+                }
+
+                $query->whereHas('translations', fn ($translations) => $translations->where('slug', $identifier));
+            })
+            ->first();
+    }
+
     public function find(int $id): ?Product
     {
         return Product::query()->with($this->relations())->find($id);
+    }
+
+    public function findByIds(array $productIds): Collection
+    {
+        return Product::query()->whereKey($productIds)->get();
+    }
+
+    public function replaceHomepageSelection(array $productIds): Collection
+    {
+        return DB::transaction(function () use ($productIds): Collection {
+            Product::query()->update([
+                'is_homepage_featured' => false,
+                'homepage_position' => null,
+            ]);
+
+            foreach ($productIds as $position => $productId) {
+                Product::query()->whereKey($productId)->update([
+                    'is_homepage_featured' => true,
+                    'homepage_position' => $position + 1,
+                ]);
+            }
+
+            return $this->homepage();
+        });
     }
 
     public function findAsset(int $productId, int $assetId): ?Asset
@@ -92,7 +154,12 @@ final class ProductRepository implements ProductRepositoryInterface
     public function update(Product $product, UpdateProductInput $input, array $translations): Product
     {
         return DB::transaction(function () use ($product, $input, $translations): Product {
-            $product->update($this->productAttributes($input));
+            $attributes = $this->productAttributes($input);
+            if ($input->status !== 'published') {
+                $attributes['is_homepage_featured'] = false;
+                $attributes['homepage_position'] = null;
+            }
+            $product->update($attributes);
             $this->storeTranslations($product, $translations);
             $this->syncOrganization($product, $input->categoryIds, $input->collectionIds, $input->tags);
 
@@ -162,7 +229,7 @@ final class ProductRepository implements ProductRepositoryInterface
         return $variant;
     }
 
-    /** @return array{status: string, gender: ?string, price_amount: int, compare_at_price_amount: ?int, discount_percentage: ?float, stock_quantity: int, low_stock_threshold: int} */
+    /** @return array{status: string, gender: ?string, price_amount: int, compare_at_price_amount: ?int, discount_percentage: ?float, stock_quantity: int, low_stock_threshold: int, is_homepage_featured?: bool, homepage_position?: ?int} */
     private function productAttributes(CreateProductInput|UpdateProductInput $input): array
     {
         return [

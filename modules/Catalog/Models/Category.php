@@ -10,7 +10,10 @@ use Modules\Core\Models\BaseModel;
 
 class Category extends BaseModel
 {
-    protected $casts = ['is_active' => 'boolean'];
+    protected $casts = [
+        'is_active' => 'boolean',
+        'is_homepage_featured' => 'boolean',
+    ];
 
     public function translations(): HasMany
     {

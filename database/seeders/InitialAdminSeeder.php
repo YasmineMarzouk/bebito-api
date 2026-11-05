@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Modules\Core\Enums\UserTypeEnum;
 use Modules\Core\Models\Role;
 
 class InitialAdminSeeder extends Seeder
@@ -23,11 +24,12 @@ class InitialAdminSeeder extends Seeder
             [
                 'name' => env('INITIAL_ADMIN_NAME', 'Store Owner'),
                 'password' => Hash::make($password),
+                'user_type' => UserTypeEnum::Staff->value,
                 'email_verified_at' => now(),
             ],
         );
 
-        $owner = Role::query()->firstOrCreate(['name' => 'owner']);
-        $user->roles()->syncWithoutDetaching([$owner->id]);
+        $owner = Role::query()->firstOrCreate(['name' => 'owner'], ['title' => 'Owner']);
+        $user->roles()->sync([$owner->id]);
     }
 }

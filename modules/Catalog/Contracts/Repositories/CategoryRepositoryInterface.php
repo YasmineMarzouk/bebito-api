@@ -12,7 +12,23 @@ interface CategoryRepositoryInterface
     /** @return Collection<int, Category> */
     public function all(): Collection;
 
+    /** @return Collection<int, Category> */
+    public function homepage(): Collection;
+
+    /** @return Collection<int, Category> */
+    public function shop(): Collection;
+
     public function find(int $id): ?Category;
+
+    /** @param array<int, int> $categoryIds
+     * @return Collection<int, Category>
+     */
+    public function findByIds(array $categoryIds): Collection;
+
+    /** @param array<int, int> $categoryIds
+     * @return Collection<int, Category>
+     */
+    public function replaceHomepageSelection(array $categoryIds): Collection;
 
     public function create(CreateCategoryInput $input): Category;
 

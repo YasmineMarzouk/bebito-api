@@ -4,6 +4,7 @@ namespace Modules\Auth\Repositories;
 
 use App\Models\User;
 use Modules\Auth\Contracts\Repositories\AuthUserRepositoryInterface;
+use Modules\Core\Enums\UserTypeEnum;
 
 final class AuthUserRepository implements AuthUserRepositoryInterface
 {
@@ -14,11 +15,11 @@ final class AuthUserRepository implements AuthUserRepositoryInterface
 
     public function hasAdministratorRole(User $user): bool
     {
-        return $user->roles()->whereIn('name', ['owner', 'admin'])->exists();
+        return $user->user_type === UserTypeEnum::Staff;
     }
 
     public function hasCustomerRole(User $user): bool
     {
-        return $user->roles()->where('name', 'customer')->exists();
+        return $user->user_type === UserTypeEnum::Customer;
     }
 }

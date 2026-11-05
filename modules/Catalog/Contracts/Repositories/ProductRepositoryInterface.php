@@ -13,7 +13,25 @@ interface ProductRepositoryInterface
     /** @return Collection<int, Product> */
     public function all(): Collection;
 
+    /** @return Collection<int, Product> */
+    public function homepage(): Collection;
+
+    /** @return Collection<int, Product> */
+    public function shop(?int $collectionId = null, bool $discounted = false): Collection;
+
+    public function findShop(string $identifier): ?Product;
+
     public function find(int $id): ?Product;
+
+    /** @param array<int, int> $productIds
+     * @return Collection<int, Product>
+     */
+    public function findByIds(array $productIds): Collection;
+
+    /** @param array<int, int> $productIds
+     * @return Collection<int, Product>
+     */
+    public function replaceHomepageSelection(array $productIds): Collection;
 
     public function findAsset(int $productId, int $assetId): ?Asset;
 

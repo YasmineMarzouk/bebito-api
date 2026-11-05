@@ -18,6 +18,17 @@ final class CollectionRepository implements CollectionRepositoryInterface
         return Collection::query()->with(['translations', 'primaryAsset'])->withCount('products')->orderBy('sort_order')->orderBy('id')->get();
     }
 
+    public function shop(): EloquentCollection
+    {
+        return Collection::query()
+            ->with(['translations', 'primaryAsset'])
+            ->withCount('products')
+            ->where('is_active', true)
+            ->latest('created_at')
+            ->latest('id')
+            ->get();
+    }
+
     public function find(int $id): ?Collection
     {
         return Collection::query()->with(['translations', 'primaryAsset'])->withCount('products')->find($id);
