@@ -38,13 +38,19 @@ class StaffAccessSeeder extends Seeder
 
         $owner->sections()->sync($sections->pluck('id')->all());
         $timestamp = now();
-        $rows = $sections->flatMap(fn (Section $section): array => $permissions->map(fn (Permission $permission): array => [
-            'role_id' => $owner->id,
-            'section_id' => $section->id,
-            'permission_id' => $permission->id,
-            'created_at' => $timestamp,
-            'updated_at' => $timestamp,
-        ])->all())->all();
+        $rows = [];
+        foreach ($sections as $section) {
+            foreach ($permissions as $permission) {
+                $rows[] = [
+                    'role_id' => $owner->id,
+                    'section_id' => $section->id,
+                    'permission_id' => $permission->id,
+                    'created_at' => $timestamp,
+                    'updated_at' => $timestamp,
+                ];
+            }
+        }
+
         DB::table('role_section_permission')->upsert($rows, ['role_id', 'section_id', 'permission_id'], ['updated_at']);
     }
 }

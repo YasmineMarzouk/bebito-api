@@ -15,8 +15,8 @@ final readonly class UpdateProductInput
      * @param  array<int, UploadedFile>  $images
      */
     public function __construct(
-        public string $status,
-        public ?string $gender,
+        public int $status,
+        public ?int $gender,
         public array $translations,
         public int $priceAmount,
         public ?int $compareAtPriceAmount,
@@ -28,7 +28,6 @@ final readonly class UpdateProductInput
         public array $tags,
         public array $variants,
         public array $images,
-        public ?int $primaryImageIndex,
         public ?int $primaryImageId,
     ) {}
 
@@ -51,7 +50,6 @@ final readonly class UpdateProductInput
             $create->tags,
             $create->variants,
             $create->images,
-            $create->primaryImageIndex,
             array_key_exists('primary_image_id', $data) && $data['primary_image_id'] !== null ? (int) $data['primary_image_id'] : null,
         );
     }

@@ -12,7 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('order_addresses', function (Blueprint $table) {
-            $table->id(); $table->foreignId('order_id')->constrained()->cascadeOnDelete(); $table->string('type'); $table->string('recipient_name'); $table->string('phone'); $table->string('line_one'); $table->string('line_two')->nullable(); $table->string('city'); $table->string('postal_code')->nullable(); $table->string('country_code',2); $table->unique(['order_id','type']);
+            $table->id();
+            $table->foreignId('order_id')->constrained()->cascadeOnDelete();
+            $table->unsignedTinyInteger('type');
+            $table->string('recipient_name');
+            $table->string('phone');
+            $table->string('line_one');
+            $table->string('line_two')->nullable();
+            $table->string('city');
+            $table->string('postal_code')->nullable();
+            $table->string('country_code', 2);
+            $table->unique(['order_id', 'type']);
             $table->timestamps();
         });
     }

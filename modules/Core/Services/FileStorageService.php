@@ -32,7 +32,7 @@ final class FileStorageService implements FileStorageServiceInterface
             'mime_type' => $file->getMimeType(),
             'size' => $file->getSize(),
             'sort_order' => $input->sortOrder,
-            'is_primary' => $input->isPrimary,
+            'primary_image' => $input->primaryImage,
         ]);
     }
 

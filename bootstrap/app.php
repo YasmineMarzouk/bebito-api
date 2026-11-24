@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Middleware\EnsureActiveAccount;
+use App\Http\Middleware\EnsureStaffPermission;
+use App\Http\Middleware\ResolveAuthenticationContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,7 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->prepend(ResolveAuthenticationContext::class);
         $middleware->statefulApi();
+        $middleware->alias([
+            'active.account' => EnsureActiveAccount::class,
+            'staff.permission' => EnsureStaffPermission::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (ExternalServiceException $exception, Request $request) {

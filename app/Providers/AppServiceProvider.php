@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
+use App\Mail\NotificationSafetyGuard;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Mail\Events\MessageSending;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,8 +25,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Event::listen(MessageSending::class, NotificationSafetyGuard::class);
+
         RateLimiter::for('login', function (Request $request): Limit {
             return Limit::perMinute(5)->by(strtolower((string) $request->input('email')).'|'.$request->ip());
+        });
+
+        RateLimiter::for('checkout', function (Request $request): Limit {
+            return Limit::perMinute(10)->by(strtolower((string) $request->input('email')).'|'.$request->ip());
+        });
+
+        RateLimiter::for('coupon-quote', function (Request $request): Limit {
+            return Limit::perMinute(30)->by($request->ip());
         });
     }
 }

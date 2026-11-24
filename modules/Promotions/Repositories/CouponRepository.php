@@ -3,6 +3,7 @@
 namespace Modules\Promotions\Repositories;
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Modules\Promotions\Contracts\Repositories\CouponRepositoryInterface;
 use Modules\Promotions\DTOs\Inputs\CreateCouponInput;
 use Modules\Promotions\DTOs\Inputs\UpdateCouponInput;
@@ -15,9 +16,29 @@ final class CouponRepository implements CouponRepositoryInterface
         return Coupon::query()->orderByDesc('id')->get();
     }
 
+    public function paginate(int $perPage, int $page): LengthAwarePaginator
+    {
+        return Coupon::query()->orderByDesc('id')->paginate($perPage, ['*'], 'page', $page);
+    }
+
     public function find(int $id): ?Coupon
     {
         return Coupon::query()->find($id);
+    }
+
+    public function findByCode(string $code): ?Coupon
+    {
+        return Coupon::query()->where('code', $code)->first();
+    }
+
+    public function findForUpdate(int $id): ?Coupon
+    {
+        return Coupon::query()->lockForUpdate()->find($id);
+    }
+
+    public function findByCodeForUpdate(string $code): ?Coupon
+    {
+        return Coupon::query()->where('code', $code)->lockForUpdate()->first();
     }
 
     public function create(CreateCouponInput $input): Coupon
@@ -47,9 +68,15 @@ final class CouponRepository implements CouponRepositoryInterface
             ->exists();
     }
 
-    public function incrementUsage(int $couponId): void
+    public function incrementUsage(int $couponId): bool
     {
-        Coupon::query()->whereKey($couponId)->increment('usage_count');
+        return Coupon::query()
+            ->whereKey($couponId)
+            ->where('is_active', true)
+            ->where(function ($query): void {
+                $query->whereNull('usage_limit')->orWhereColumn('usage_count', '<', 'usage_limit');
+            })
+            ->increment('usage_count') === 1;
     }
 
     public function decrementUsage(int $couponId): void

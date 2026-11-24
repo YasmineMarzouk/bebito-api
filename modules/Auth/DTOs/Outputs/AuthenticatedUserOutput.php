@@ -6,7 +6,7 @@ use App\Models\User;
 
 final readonly class AuthenticatedUserOutput
 {
-    public function __construct(public int $id, public string $name, public string $email, public ?string $gender, public string $userType) {}
+    public function __construct(public int $id, public string $name, public string $email, public ?string $gender, public int $userType) {}
 
     public static function fromModel(User $user): self
     {

@@ -41,7 +41,7 @@ class FileStorageServiceTest extends TestCase
             'mime_type' => 'image/jpeg',
             'size' => 1024,
             'sort_order' => 2,
-            'is_primary' => true,
+            'primary_image' => true,
         ])->andReturn($asset);
 
         $result = (new FileStorageService($filesystem, $assets))->store(

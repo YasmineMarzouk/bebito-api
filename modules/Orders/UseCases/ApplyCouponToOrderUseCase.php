@@ -6,6 +6,8 @@ use Modules\Core\Contracts\Services\TransactionManagerInterface;
 use Modules\Orders\Contracts\Repositories\OrderRepositoryInterface;
 use Modules\Orders\DTOs\Inputs\ApplyCouponToOrderInput;
 use Modules\Orders\DTOs\Outputs\OrderCouponOutput;
+use Modules\Orders\Enums\OrderStatusEnum;
+use Modules\Orders\Exceptions\OrderCouponModificationNotAllowedException;
 use Modules\Orders\Exceptions\OrderNotFoundException;
 use Modules\Promotions\Contracts\Services\CouponApplicationServiceInterface;
 
@@ -20,10 +22,14 @@ final class ApplyCouponToOrderUseCase
     public function execute(int $orderId, ApplyCouponToOrderInput $input): OrderCouponOutput
     {
         return $this->transactions->run(function () use ($orderId, $input): OrderCouponOutput {
-            $order = $this->orders->find($orderId);
+            $order = $this->orders->findForUpdate($orderId);
 
             if ($order === null) {
                 throw new OrderNotFoundException;
+            }
+
+            if ($order->status !== OrderStatusEnum::PENDING) {
+                throw new OrderCouponModificationNotAllowedException;
             }
 
             $grossAmount = $order->total_amount + $order->coupon_discount_amount;

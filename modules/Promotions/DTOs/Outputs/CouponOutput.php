@@ -9,7 +9,7 @@ final readonly class CouponOutput
     public function __construct(
         public int $id,
         public string $code,
-        public string $type,
+        public int $type,
         public ?int $percentage,
         public ?int $fixedAmount,
         public int $minOrderAmount,
@@ -24,7 +24,7 @@ final readonly class CouponOutput
         return new self(
             id: $coupon->id,
             code: $coupon->code,
-            type: $coupon->type,
+            type: $coupon->type->value,
             percentage: $coupon->percentage,
             fixedAmount: $coupon->fixed_amount,
             minOrderAmount: $coupon->min_order_amount,

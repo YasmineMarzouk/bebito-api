@@ -6,9 +6,9 @@ use Modules\Catalog\Contracts\Repositories\ProductRepositoryInterface;
 use Modules\Catalog\DTOs\Inputs\ListShopProductsInput;
 use Modules\Catalog\DTOs\Outputs\ProductOutput;
 
-final class ListShopProductsUseCase
+final readonly class ListShopProductsUseCase
 {
-    public function __construct(private readonly ProductRepositoryInterface $products) {}
+    public function __construct(private ProductRepositoryInterface $products) {}
 
     /** @return array<int, ProductOutput> */
     public function execute(ListShopProductsInput $input): array

@@ -4,7 +4,6 @@ namespace Modules\Catalog\UseCases;
 
 use Illuminate\Http\UploadedFile;
 use Modules\Catalog\Contracts\Repositories\CategoryRepositoryInterface;
-use Modules\Catalog\Contracts\Services\CatalogTranslationServiceInterface;
 use Modules\Catalog\DTOs\Inputs\CreateCategoryInput;
 use Modules\Catalog\DTOs\Outputs\CategoryOutput;
 use Modules\Catalog\Exceptions\CategoryNameAlreadyExistsException;
@@ -17,18 +16,12 @@ final readonly class CreateCategoryUseCase
 {
     public function __construct(
         private CategoryRepositoryInterface $categories,
-        private CatalogTranslationServiceInterface $translations,
         private FileStorageServiceInterface $files,
         private TransactionManagerInterface $transactions,
     ) {}
 
     public function execute(CreateCategoryInput $input, ?UploadedFile $banner = null): CategoryOutput
     {
-        $input = new CreateCategoryInput(
-            $input->isActive,
-            $this->translations->completeFrenchTranslation($input->translations[0], $input->translations[1] ?? null)
-        );
-
         if ($this->categories->frenchNameExists($input->translations[0]->name)) {
             throw new CategoryNameAlreadyExistsException;
         }

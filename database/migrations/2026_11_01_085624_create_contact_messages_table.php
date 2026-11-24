@@ -12,7 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('contact_messages', function (Blueprint $table) {
-            $table->id(); $table->string('name'); $table->string('email'); $table->string('subject'); $table->text('message'); $table->timestamp('read_at')->nullable(); $table->timestamp('archived_at')->nullable(); $table->softDeletes();
+            $table->id();
+            $table->string('name');
+            $table->string('email');
+            $table->string('subject');
+            $table->text('message');
+            $table->timestamp('read_at')->nullable();
+            $table->timestamp('archived_at')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

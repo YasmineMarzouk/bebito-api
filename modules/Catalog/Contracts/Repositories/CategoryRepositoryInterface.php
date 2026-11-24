@@ -3,6 +3,7 @@
 namespace Modules\Catalog\Contracts\Repositories;
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Modules\Catalog\DTOs\Inputs\CreateCategoryInput;
 use Modules\Catalog\DTOs\Inputs\UpdateCategoryInput;
 use Modules\Catalog\Models\Category;
@@ -11,6 +12,9 @@ interface CategoryRepositoryInterface
 {
     /** @return Collection<int, Category> */
     public function all(): Collection;
+
+    /** @return LengthAwarePaginator<int, Category> */
+    public function paginate(int $perPage, int $page): LengthAwarePaginator;
 
     /** @return Collection<int, Category> */
     public function homepage(): Collection;
@@ -24,11 +28,6 @@ interface CategoryRepositoryInterface
      * @return Collection<int, Category>
      */
     public function findByIds(array $categoryIds): Collection;
-
-    /** @param array<int, int> $categoryIds
-     * @return Collection<int, Category>
-     */
-    public function replaceHomepageSelection(array $categoryIds): Collection;
 
     public function create(CreateCategoryInput $input): Category;
 

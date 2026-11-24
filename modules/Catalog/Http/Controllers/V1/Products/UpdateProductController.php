@@ -12,6 +12,6 @@ final class UpdateProductController extends BaseController
 {
     public function __invoke(int $product, UpdateProductRequest $request, UpdateProductUseCase $useCase): JsonResponse
     {
-        return $this->makeSuccess('Product updated.', $useCase->execute($product, UpdateProductInput::from($request->validated())));
+        return $this->makeSuccess('Product updated.', $useCase->execute($product, UpdateProductInput::from($request->validated()), $request->user('admin')?->id));
     }
 }

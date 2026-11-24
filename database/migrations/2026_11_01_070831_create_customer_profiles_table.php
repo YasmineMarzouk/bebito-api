@@ -12,10 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('customer_profiles', function (Blueprint $table) {
-            $table->id(); 
-            $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete(); 
-            $table->string('phone')->nullable(); 
-            $table->string('preferred_locale_code', 5)->default('fr'); 
+            $table->id();
+            $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
+            $table->string('phone')->nullable();
+            $table->string('preferred_locale_code', 5)->default('fr');
             $table->boolean('marketing_opt_in')->default(false);
             $table->timestamps();
         });

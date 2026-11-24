@@ -17,7 +17,7 @@ final class CustomerLoginController extends BaseController
         $validated = $request->validated();
         $user = $useCase->execute(LoginInput::from($validated));
 
-        Auth::guard('web')->login($user, (bool) ($validated['remember'] ?? false));
+        Auth::guard('customer')->login($user, (bool) ($validated['remember'] ?? false));
         $request->session()->regenerate();
 
         return $this->makeSuccess('Authenticated.', AuthenticatedUserOutput::fromModel($user));

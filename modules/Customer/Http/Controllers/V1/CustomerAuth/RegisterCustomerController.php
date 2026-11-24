@@ -19,7 +19,7 @@ final class RegisterCustomerController extends BaseController
         $customer = $useCase->execute($input);
 
         $user = app(User::class)->newQuery()->findOrFail($customer->id);
-        Auth::guard('web')->login($user);
+        Auth::guard('customer')->login($user);
         $request->session()->regenerate();
 
         return $this->makeSuccess('Customer registered.', AuthenticatedUserOutput::fromModel($user), 201);

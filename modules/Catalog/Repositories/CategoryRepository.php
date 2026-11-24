@@ -3,11 +3,13 @@
 namespace Modules\Catalog\Repositories;
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Modules\Catalog\Contracts\Repositories\CategoryRepositoryInterface;
 use Modules\Catalog\DTOs\Inputs\CatalogTranslationInput;
 use Modules\Catalog\DTOs\Inputs\CreateCategoryInput;
 use Modules\Catalog\DTOs\Inputs\UpdateCategoryInput;
+use Modules\Catalog\Enums\ProductStatusEnum;
 use Modules\Catalog\Models\Category;
 use Modules\Catalog\Models\CategoryTranslation;
 
@@ -18,14 +20,19 @@ final class CategoryRepository implements CategoryRepositoryInterface
         return Category::query()->with(['translations', 'primaryAsset'])->withCount('products')->orderBy('id')->get();
     }
 
+    public function paginate(int $perPage, int $page): LengthAwarePaginator
+    {
+        return Category::query()->with(['translations', 'primaryAsset'])->withCount('products')->orderBy('id')->paginate($perPage, ['*'], 'page', $page);
+    }
+
     public function homepage(): Collection
     {
         return Category::query()
             ->with(['translations', 'primaryAsset'])
-            ->withCount('products')
+            ->withCount(['products' => fn ($query) => $query->where('status', ProductStatusEnum::Published->value)])
             ->where('is_active', true)
-            ->where('is_homepage_featured', true)
-            ->orderBy('homepage_position')
+            ->orderBy('id')
+            ->limit(6)
             ->get();
     }
 
@@ -33,7 +40,7 @@ final class CategoryRepository implements CategoryRepositoryInterface
     {
         return Category::query()
             ->with(['translations', 'primaryAsset'])
-            ->withCount('products')
+            ->withCount(['products' => fn ($query) => $query->where('status', ProductStatusEnum::Published->value)])
             ->where('is_active', true)
             ->orderBy('id')
             ->get();
@@ -47,25 +54,6 @@ final class CategoryRepository implements CategoryRepositoryInterface
     public function findByIds(array $categoryIds): Collection
     {
         return Category::query()->whereKey($categoryIds)->get();
-    }
-
-    public function replaceHomepageSelection(array $categoryIds): Collection
-    {
-        return DB::transaction(function () use ($categoryIds): Collection {
-            Category::query()->update([
-                'is_homepage_featured' => false,
-                'homepage_position' => null,
-            ]);
-
-            foreach ($categoryIds as $position => $categoryId) {
-                Category::query()->whereKey($categoryId)->update([
-                    'is_homepage_featured' => true,
-                    'homepage_position' => $position + 1,
-                ]);
-            }
-
-            return $this->homepage();
-        });
     }
 
     public function create(CreateCategoryInput $input): Category
@@ -83,10 +71,8 @@ final class CategoryRepository implements CategoryRepositoryInterface
         return DB::transaction(function () use ($category, $input): Category {
             $category->update([
                 'is_active' => $input->isActive,
-                'is_homepage_featured' => $input->isActive ? $category->is_homepage_featured : false,
-                'homepage_position' => $input->isActive ? $category->homepage_position : null,
             ]);
-            $this->storeTranslations($category, $input->translations);
+            //$this->storeTranslations($category, $input->translations);
 
             return $this->find($category->id) ?? $category;
         });

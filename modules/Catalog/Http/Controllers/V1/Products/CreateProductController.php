@@ -14,7 +14,7 @@ final class CreateProductController extends BaseController
     {
         return $this->makeSuccess(
             'Product created.',
-            $useCase->execute(CreateProductInput::from($request->validated())),
+            $useCase->execute(CreateProductInput::from($request->validated()), $request->user('admin')?->id),
             201
         );
     }

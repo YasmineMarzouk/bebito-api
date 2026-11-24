@@ -15,7 +15,7 @@ final class LoginController extends BaseController
     public function __invoke(LoginRequest $request, AuthenticateUserUseCase $useCase): JsonResponse
     {
         $user = $useCase->execute(LoginInput::from($request->validated()));
-        Auth::guard('web')->login($user, (bool) ($request->validated('remember') ?? false));
+        Auth::guard('admin')->login($user, (bool) ($request->validated('remember') ?? false));
         $request->session()->regenerate();
 
         return $this->makeSuccess('Authenticated.', AuthenticatedUserOutput::fromModel($user));

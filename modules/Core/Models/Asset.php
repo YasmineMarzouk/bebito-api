@@ -9,7 +9,7 @@ class Asset extends BaseModel
         return [
             'size' => 'integer',
             'sort_order' => 'integer',
-            'is_primary' => 'boolean',
+            'primary_image' => 'boolean',
         ];
     }
 }

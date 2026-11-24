@@ -12,7 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('product_translations', function (Blueprint $table) {
-            $table->id(); $table->foreignId('product_id')->constrained()->cascadeOnDelete(); $table->string('locale_code',5); $table->string('name'); $table->string('slug'); $table->string('short_description')->nullable(); $table->text('description')->nullable(); $table->string('meta_title')->nullable(); $table->text('meta_description')->nullable(); $table->unique(['product_id','locale_code']); $table->unique(['locale_code','slug']);
+            $table->id();
+            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
+            $table->string('locale_code', 5);
+            $table->string('name');
+            $table->string('slug');
+            $table->string('short_description')->nullable();
+            $table->text('description')->nullable();
+            $table->string('meta_title')->nullable();
+            $table->text('meta_description')->nullable();
+            $table->unique(['product_id', 'locale_code']);
+            $table->unique(['locale_code', 'slug']);
             $table->timestamps();
         });
     }

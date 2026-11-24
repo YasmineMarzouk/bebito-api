@@ -3,6 +3,7 @@
 namespace Modules\Catalog\Contracts\Repositories;
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Modules\Catalog\DTOs\Inputs\CreateProductInput;
 use Modules\Catalog\DTOs\Inputs\UpdateProductInput;
 use Modules\Catalog\Models\Product;
@@ -13,11 +14,19 @@ interface ProductRepositoryInterface
     /** @return Collection<int, Product> */
     public function all(): Collection;
 
+    /** @return LengthAwarePaginator<int, Product> */
+    public function paginate(int $perPage, int $page): LengthAwarePaginator;
+
     /** @return Collection<int, Product> */
     public function homepage(): Collection;
 
     /** @return Collection<int, Product> */
     public function shop(?int $collectionId = null, bool $discounted = false): Collection;
+
+    /** @param array<int, int> $productIds
+     * @return Collection<int, Product>
+     */
+    public function findShopByIds(array $productIds): Collection;
 
     public function findShop(string $identifier): ?Product;
 
@@ -31,17 +40,15 @@ interface ProductRepositoryInterface
     /** @param array<int, int> $productIds
      * @return Collection<int, Product>
      */
-    public function replaceHomepageSelection(array $productIds): Collection;
+    public function findByIdsWithVariants(array $productIds): Collection;
 
     public function findAsset(int $productId, int $assetId): ?Asset;
 
     public function setPrimaryAsset(int $productId, int $assetId): bool;
 
-    public function setFirstAssetAsPrimary(int $productId): void;
+    public function create(CreateProductInput $input, ?int $userId = null): Product;
 
-    public function create(CreateProductInput $input, array $translations): Product;
-
-    public function update(Product $product, UpdateProductInput $input, array $translations): Product;
+    public function update(Product $product, UpdateProductInput $input, array $translations, ?int $userId = null): Product;
 
     public function delete(Product $product): void;
 }

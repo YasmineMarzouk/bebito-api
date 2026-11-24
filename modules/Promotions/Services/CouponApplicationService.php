@@ -16,17 +16,46 @@ final class CouponApplicationService implements CouponApplicationServiceInterfac
 
     public function calculate(int $couponId, int $orderAmount): CouponApplication
     {
-        $coupon = $this->coupons->find($couponId);
+        $coupon = $this->coupons->findForUpdate($couponId);
 
         if ($coupon === null) {
             throw new CouponNotFoundException;
         }
 
-        if (! $this->isApplicable($coupon, $orderAmount)) {
+        return $this->applicationFor($coupon, $orderAmount);
+    }
+
+    public function recalculate(int $couponId, int $orderAmount, ?int $currentCouponId): CouponApplication
+    {
+        $coupon = $this->coupons->findForUpdate($couponId);
+
+        if ($coupon === null) {
+            throw new CouponNotFoundException;
+        }
+
+        return $this->applicationFor($coupon, $orderAmount, $couponId === $currentCouponId);
+    }
+
+    public function calculateByCode(string $couponCode, int $orderAmount): CouponApplication
+    {
+        $coupon = $this->coupons->findByCodeForUpdate(strtoupper(trim($couponCode)));
+
+        if ($coupon === null) {
             throw new CouponNotApplicableException;
         }
 
-        return new CouponApplication($coupon->id, $coupon->code, $this->discountAmount($coupon, $orderAmount));
+        return $this->applicationFor($coupon, $orderAmount);
+    }
+
+    public function previewByCode(string $couponCode, int $orderAmount): CouponApplication
+    {
+        $coupon = $this->coupons->findByCode(strtoupper(trim($couponCode)));
+
+        if ($coupon === null) {
+            throw new CouponNotApplicableException;
+        }
+
+        return $this->applicationFor($coupon, $orderAmount);
     }
 
     public function replaceUsage(?int $previousCouponId, int $couponId): void
@@ -39,20 +68,38 @@ final class CouponApplicationService implements CouponApplicationServiceInterfac
             $this->coupons->decrementUsage($previousCouponId);
         }
 
-        $this->coupons->incrementUsage($couponId);
+        if (! $this->coupons->incrementUsage($couponId)) {
+            throw new CouponNotApplicableException;
+        }
     }
 
-    private function isApplicable(Coupon $coupon, int $orderAmount): bool
+    public function releaseUsage(?int $couponId): void
+    {
+        if ($couponId !== null) {
+            $this->coupons->decrementUsage($couponId);
+        }
+    }
+
+    private function applicationFor(Coupon $coupon, int $orderAmount, bool $isAlreadyApplied = false): CouponApplication
+    {
+        if (! $this->isApplicable($coupon, $orderAmount, $isAlreadyApplied)) {
+            throw new CouponNotApplicableException;
+        }
+
+        return new CouponApplication($coupon->id, $coupon->code, $this->discountAmount($coupon, $orderAmount));
+    }
+
+    private function isApplicable(Coupon $coupon, int $orderAmount, bool $isAlreadyApplied = false): bool
     {
         return $coupon->is_active
             && ($coupon->expires_at === null || ! $coupon->expires_at->copy()->endOfDay()->isPast())
-            && ($coupon->usage_limit === null || $coupon->usage_count < $coupon->usage_limit)
+            && ($isAlreadyApplied || $coupon->usage_limit === null || $coupon->usage_count < $coupon->usage_limit)
             && $orderAmount >= $coupon->min_order_amount;
     }
 
     private function discountAmount(Coupon $coupon, int $orderAmount): int
     {
-        $discount = $coupon->type === CouponTypeEnum::Percentage->value
+        $discount = $coupon->type === CouponTypeEnum::Percentage
             ? (int) round($orderAmount * ((int) $coupon->percentage) / 100)
             : (int) $coupon->fixed_amount;
 

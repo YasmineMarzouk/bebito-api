@@ -2,16 +2,17 @@
 
 namespace Modules\Catalog\UseCases;
 
+use Illuminate\Support\Facades\Event;
 use Modules\Catalog\Contracts\Repositories\CollectionRepositoryInterface;
-use Modules\Catalog\Contracts\Services\CatalogTranslationServiceInterface;
 use Modules\Catalog\DTOs\Inputs\UpdateCollectionInput;
 use Modules\Catalog\DTOs\Outputs\CollectionOutput;
+use Modules\Catalog\Events\CollectionPublished;
 use Modules\Catalog\Exceptions\CollectionNotFoundException;
 use Modules\Catalog\Exceptions\CollectionSlugAlreadyExistsException;
 
 final class UpdateCollectionUseCase
 {
-    public function __construct(private readonly CollectionRepositoryInterface $collections, private readonly CatalogTranslationServiceInterface $translations) {}
+    public function __construct(private readonly CollectionRepositoryInterface $collections) {}
 
     public function execute(int $collectionId, UpdateCollectionInput $input): CollectionOutput
     {
@@ -21,14 +22,19 @@ final class UpdateCollectionUseCase
             throw new CollectionNotFoundException;
         }
 
-        $input = new UpdateCollectionInput($input->isActive, $input->isFeatured, $input->sortOrder, $this->translations->completeFrenchTranslation($input->translations[0], $input->translations[1] ?? null));
-
         foreach ($input->translations as $translation) {
             if ($translation->slug !== null && $this->collections->slugExists($translation->localeCode, $translation->slug, $collection->id)) {
                 throw new CollectionSlugAlreadyExistsException;
             }
         }
 
-        return CollectionOutput::fromModel($this->collections->update($collection, $input));
+        $wasInactive = ! $collection->is_active;
+        $collection = $this->collections->update($collection, $input);
+
+        if ($wasInactive && $collection->is_active) {
+            Event::dispatch(new CollectionPublished($collection->id));
+        }
+
+        return CollectionOutput::fromModel($collection);
     }
 }

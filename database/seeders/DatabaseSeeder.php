@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             StoreDefaultsSeeder::class,
+            SizeSeeder::class,
             InitialAdminSeeder::class,
             StaffAccessSeeder::class,
         ]);

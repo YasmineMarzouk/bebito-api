@@ -3,11 +3,13 @@
 namespace Modules\Catalog\Repositories;
 
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Modules\Catalog\Contracts\Repositories\CollectionRepositoryInterface;
 use Modules\Catalog\DTOs\Inputs\CatalogTranslationInput;
 use Modules\Catalog\DTOs\Inputs\CreateCollectionInput;
 use Modules\Catalog\DTOs\Inputs\UpdateCollectionInput;
+use Modules\Catalog\Enums\ProductStatusEnum;
 use Modules\Catalog\Models\Collection;
 use Modules\Catalog\Models\CollectionTranslation;
 
@@ -18,11 +20,16 @@ final class CollectionRepository implements CollectionRepositoryInterface
         return Collection::query()->with(['translations', 'primaryAsset'])->withCount('products')->orderBy('sort_order')->orderBy('id')->get();
     }
 
+    public function paginate(int $perPage, int $page): LengthAwarePaginator
+    {
+        return Collection::query()->with(['translations', 'primaryAsset'])->withCount('products')->orderBy('sort_order')->orderBy('id')->paginate($perPage, ['*'], 'page', $page);
+    }
+
     public function shop(): EloquentCollection
     {
         return Collection::query()
             ->with(['translations', 'primaryAsset'])
-            ->withCount('products')
+            ->withCount(['products' => fn ($query) => $query->where('status', ProductStatusEnum::Published->value)])
             ->where('is_active', true)
             ->latest('created_at')
             ->latest('id')

@@ -14,7 +14,7 @@ final class GetAuthenticatedCustomerController extends BaseController
     public function __invoke(Request $request, GetAuthenticatedCustomerUseCase $useCase): JsonResponse
     {
         /** @var User $user */
-        $user = $request->user();
+        $user = $request->user('customer');
 
         return $this->makeSuccess('Authenticated customer retrieved.', AuthenticatedUserOutput::fromModel($useCase->execute($user)));
     }

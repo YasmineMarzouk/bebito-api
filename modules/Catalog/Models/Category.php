@@ -12,7 +12,6 @@ class Category extends BaseModel
 {
     protected $casts = [
         'is_active' => 'boolean',
-        'is_homepage_featured' => 'boolean',
     ];
 
     public function translations(): HasMany
@@ -25,9 +24,14 @@ class Category extends BaseModel
         return $this->belongsToMany(Product::class)->using(CategoryProduct::class)->withTimestamps();
     }
 
+    public function packs(): BelongsToMany
+    {
+        return $this->belongsToMany(Pack::class)->using(CategoryPack::class)->withTimestamps();
+    }
+
     public function primaryAsset(): MorphOne
     {
-        return $this->morphOne(Asset::class, 'resource')->where('is_primary', true);
+        return $this->morphOne(Asset::class, 'resource')->where('primary_image', true);
     }
 
     public function getMorphClass(): string

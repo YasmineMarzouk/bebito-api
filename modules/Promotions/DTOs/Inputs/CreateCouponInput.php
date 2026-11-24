@@ -2,11 +2,13 @@
 
 namespace Modules\Promotions\DTOs\Inputs;
 
+use Modules\Promotions\Enums\CouponTypeEnum;
+
 final readonly class CreateCouponInput
 {
     public function __construct(
         public string $code,
-        public string $type,
+        public CouponTypeEnum $type,
         public ?int $percentage,
         public ?int $fixedAmount,
         public int $minOrderAmount,
@@ -20,7 +22,7 @@ final readonly class CreateCouponInput
     {
         return new self(
             code: strtoupper(trim((string) $data['code'])),
-            type: (string) $data['type'],
+            type: CouponTypeEnum::from((int) $data['type']),
             percentage: array_key_exists('percentage', $data) && $data['percentage'] !== null ? (int) $data['percentage'] : null,
             fixedAmount: array_key_exists('fixed_amount', $data) && $data['fixed_amount'] !== null ? (int) $data['fixed_amount'] : null,
             minOrderAmount: (int) ($data['min_order_amount'] ?? 0),

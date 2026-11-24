@@ -2,6 +2,7 @@
 
 namespace Modules\Promotions\UseCases;
 
+use Illuminate\Database\UniqueConstraintViolationException;
 use Modules\Promotions\Contracts\Repositories\CouponRepositoryInterface;
 use Modules\Promotions\DTOs\Inputs\CreateCouponInput;
 use Modules\Promotions\DTOs\Outputs\CouponOutput;
@@ -17,6 +18,10 @@ final class CreateCouponUseCase
             throw new CouponCodeAlreadyExistsException;
         }
 
-        return CouponOutput::fromModel($this->coupons->create($input));
+        try {
+            return CouponOutput::fromModel($this->coupons->create($input));
+        } catch (UniqueConstraintViolationException) {
+            throw new CouponCodeAlreadyExistsException;
+        }
     }
 }

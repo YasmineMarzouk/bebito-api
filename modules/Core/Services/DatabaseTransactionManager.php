@@ -7,8 +7,8 @@ use Modules\Core\Contracts\Services\TransactionManagerInterface;
 
 final class DatabaseTransactionManager implements TransactionManagerInterface
 {
-    public function run(callable $callback): mixed
+    public function run(callable $callback, int $attempts = 1): mixed
     {
-        return DB::transaction($callback);
+        return DB::transaction($callback, attempts: $attempts);
     }
 }

@@ -10,6 +10,7 @@ final class CustomerChild extends BaseModel
 {
     protected $casts = [
         'birth_date' => 'date',
+        'newborn' => 'boolean',
     ];
 
     public function customer(): BelongsTo

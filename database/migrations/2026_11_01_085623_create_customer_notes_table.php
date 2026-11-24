@@ -12,7 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('customer_notes', function (Blueprint $table) {
-            $table->id(); $table->foreignId('user_id')->constrained()->cascadeOnDelete(); $table->foreignId('author_id')->nullable()->constrained('users')->nullOnDelete(); $table->text('body');
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('author_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->text('body');
             $table->timestamps();
         });
     }

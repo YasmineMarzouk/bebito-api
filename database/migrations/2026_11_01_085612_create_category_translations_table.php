@@ -12,7 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('category_translations', function (Blueprint $table) {
-            $table->id(); $table->foreignId('category_id')->constrained()->cascadeOnDelete(); $table->string('locale_code',5); $table->string('name'); $table->string('slug'); $table->text('description')->nullable(); $table->unique(['category_id','locale_code']); $table->unique(['locale_code','slug']);
+            $table->id();
+            $table->foreignId('category_id')->constrained()->cascadeOnDelete();
+            $table->string('locale_code', 5);
+            $table->string('name');
+            $table->string('slug');
+            $table->text('description')->nullable();
+            $table->unique(['category_id', 'locale_code']);
+            $table->unique(['locale_code', 'slug']);
             $table->timestamps();
         });
     }

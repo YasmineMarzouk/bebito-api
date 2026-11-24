@@ -26,11 +26,6 @@ final readonly class DeleteProductImageUseCase
             throw new ProductImageNotFoundException;
         }
 
-        $wasPrimary = $asset->is_primary;
         $this->files->delete($asset);
-
-        if ($wasPrimary) {
-            $this->products->setFirstAssetAsPrimary($productId);
-        }
     }
 }

@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table): void {
-            $table->string('user_type')->default('customer')->after('email');
+            $table->unsignedTinyInteger('user_type')->default(UserTypeEnum::Customer->value)->after('email');
         });
 
         DB::table('users')->whereIn('id', function ($query): void {

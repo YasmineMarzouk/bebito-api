@@ -3,6 +3,7 @@
 namespace Modules\Catalog\Contracts\Repositories;
 
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Modules\Catalog\DTOs\Inputs\CreateCollectionInput;
 use Modules\Catalog\DTOs\Inputs\UpdateCollectionInput;
 use Modules\Catalog\Models\Collection;
@@ -11,6 +12,9 @@ interface CollectionRepositoryInterface
 {
     /** @return EloquentCollection<int, Collection> */
     public function all(): EloquentCollection;
+
+    /** @return LengthAwarePaginator<int, Collection> */
+    public function paginate(int $perPage, int $page): LengthAwarePaginator;
 
     /** @return EloquentCollection<int, Collection> */
     public function shop(): EloquentCollection;

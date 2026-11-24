@@ -12,8 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('categories', function (Blueprint $table): void {
-            $table->boolean('is_homepage_featured')->default(false)->after('is_active');
-            $table->unsignedTinyInteger('homepage_position')->nullable()->after('is_homepage_featured');
         });
     }
 
@@ -23,7 +21,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('categories', function (Blueprint $table): void {
-            $table->dropColumn(['is_homepage_featured', 'homepage_position']);
         });
     }
 };

@@ -18,12 +18,11 @@ final class UpdateCollectionRequest extends FormRequest
             'is_active' => ['required', 'boolean'],
             'is_featured' => ['required', 'boolean'],
             'sort_order' => ['required', 'integer', 'min:0', 'max:65535'],
-            'translations' => ['required', 'array', 'between:1,2'],
-            'translations.*.locale_code' => ['required', 'string', Rule::in(['fr', 'en']), 'distinct'],
+            'translations' => ['required', 'array', 'size:1'],
+            'translations.0.locale_code' => ['required', 'string', Rule::in(['fr'])],
             'translations.0.name' => ['required', 'string', 'max:255'],
-            'translations.*.name' => ['nullable', 'string', 'max:255'],
-            'translations.*.slug' => ['nullable', 'string', 'max:255'],
-            'translations.*.description' => ['nullable', 'string', 'max:10000'],
+            'translations.0.slug' => ['nullable', 'string', 'max:255'],
+            'translations.0.description' => ['nullable', 'string', 'max:10000'],
         ];
     }
 }

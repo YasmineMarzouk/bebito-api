@@ -2,8 +2,9 @@
 
 namespace Modules\Core\Enums;
 
-enum UserTypeEnum: string
+enum UserTypeEnum: int
 {
-    case Customer = 'customer';
-    case Staff = 'staff';
+    case Customer = 1;
+    case Staff = 2;
+
 }

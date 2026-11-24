@@ -2,6 +2,7 @@
 
 namespace Modules\Catalog\DTOs\Outputs;
 
+use Modules\Catalog\Enums\InventoryStatusEnum;
 use Modules\Catalog\Models\Product;
 use Modules\Catalog\Models\ProductVariant;
 
@@ -10,20 +11,19 @@ final readonly class ProductOutput
     /** @param array<int, array<string, mixed>> $translations @param array<int, array<string, mixed>> $variants @param array<int, array<string, mixed>> $images @param array<int, array{id: int, name: string}> $categories @param array<int, array{id: int, name: string}> $collections @param array<int, string> $tags */
     public function __construct(
         public int $id,
-        public string $status,
-        public bool $isHomepageFeatured,
-        public ?int $homepagePosition,
-        public ?string $gender,
+        public int $status,
+        public ?int $gender,
         public ?string $sku,
         public int $priceAmount,
         public ?int $compareAtPriceAmount,
         public ?float $discountPercentage,
         public int $stockQuantity,
         public int $lowStockThreshold,
-        public string $inventoryStatus,
+        public int $inventoryStatus,
         public array $translations,
         public array $variants,
         public array $images,
+        public ?int $primaryImageId,
         public array $categories,
         public array $collections,
         public array $tags,
@@ -31,12 +31,17 @@ final readonly class ProductOutput
 
     public static function fromModel(Product $product): self
     {
+        $primaryAsset = $product->assets->firstWhere('primary_image', true);
+        $orderedAssets = $primaryAsset === null
+            ? $product->assets
+            : $product->assets
+                ->reject(fn ($asset): bool => $asset->id === $primaryAsset->id)
+                ->prepend($primaryAsset);
+
         return new self(
             id: $product->id,
-            status: $product->status,
-            isHomepageFeatured: $product->is_homepage_featured,
-            homepagePosition: $product->homepage_position,
-            gender: $product->gender,
+            status: $product->status->value,
+            gender: $product->gender?->value,
             sku: $product->sku,
             priceAmount: $product->price_amount,
             compareAtPriceAmount: $product->compare_at_price_amount,
@@ -52,12 +57,12 @@ final readonly class ProductOutput
                 'description' => $translation->description,
             ])->all(),
             variants: $product->variants->map(self::variantOutput(...))->values()->all(),
-            images: $product->assets->map(fn ($asset): array => [
+            images: $orderedAssets->map(fn ($asset): array => [
                 'id' => $asset->id,
                 'url' => rtrim((string) config('app.url'), '/').'/storage/'.ltrim($asset->path, '/'),
                 'sortOrder' => $asset->sort_order,
-                'isPrimary' => $asset->is_primary,
             ])->all(),
+            primaryImageId: $primaryAsset?->id,
             categories: $product->categories->map(fn ($category): array => [
                 'id' => $category->id,
                 'name' => $category->translations->firstWhere('locale_code', 'fr')?->name ?? $category->translations->first()?->name ?? '',
@@ -87,20 +92,20 @@ final readonly class ProductOutput
         ];
     }
 
-    private static function inventoryStatus(Product $product): string
+    private static function inventoryStatus(Product $product): int
     {
-        if ($product->stock_quantity === 0) {
-            return 'sold_out';
+        if ($product->stock_quantity === 0 || $product->variants->isEmpty()) {
+            return InventoryStatusEnum::SoldOut->value;
         }
 
         if ($product->variants->contains(fn (ProductVariant $variant): bool => ($variant->inventoryItem?->quantity ?? 0) === 0)) {
-            return 'partially_available';
+            return InventoryStatusEnum::PartiallyAvailable->value;
         }
 
         if ($product->stock_quantity < $product->low_stock_threshold) {
-            return 'last_chance';
+            return InventoryStatusEnum::LastChance->value;
         }
 
-        return 'in_stock';
+        return InventoryStatusEnum::InStock->value;
     }
 }

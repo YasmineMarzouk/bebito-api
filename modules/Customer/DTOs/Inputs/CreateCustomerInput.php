@@ -14,7 +14,7 @@ final readonly class CreateCustomerInput
         public ?string $manualBadge,
         public string $shoppingFor,
         public ?string $gender,
-        /** @var list<array{name: string, birthDate: string, gender: string}> */
+        /** @var list<array{name: string, birthDate: ?string, gender: string, newborn: bool}> */
         public array $children,
     ) {}
 
@@ -34,8 +34,9 @@ final readonly class CreateCustomerInput
             array_map(
                 fn (array $child): array => [
                     'name' => trim((string) $child['name']),
-                    'birthDate' => (string) $child['birth_date'],
+                    'birthDate' => $child['birth_date'] ?? null,
                     'gender' => (string) $child['gender'],
+                    'newborn' => (bool) ($child['newborn'] ?? false),
                 ],
                 $data['children'] ?? [],
             ),

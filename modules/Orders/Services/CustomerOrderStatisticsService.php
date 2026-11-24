@@ -4,6 +4,7 @@ namespace Modules\Orders\Services;
 
 use Modules\Orders\Contracts\Services\CustomerOrderStatisticsServiceInterface;
 use Modules\Orders\Contracts\ValueObjects\CustomerOrderStatistics;
+use Modules\Orders\Enums\OrderStatusEnum;
 use Modules\Orders\Models\Order;
 
 final class CustomerOrderStatisticsService implements CustomerOrderStatisticsServiceInterface
@@ -21,7 +22,10 @@ final class CustomerOrderStatisticsService implements CustomerOrderStatisticsSer
 
         $statistics = Order::query()
             ->whereIn('user_id', $userIds)
-            ->selectRaw("user_id, COUNT(*) as order_count, SUM(CASE WHEN status = 'delivered' THEN 1 ELSE 0 END) as delivered_order_count, SUM(CASE WHEN status = 'not_picked_up' THEN 1 ELSE 0 END) as not_picked_up_order_count, COALESCE(SUM(total_amount), 0) as total_spent_amount")
+            ->selectRaw(
+                'user_id, COUNT(*) as order_count, SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as delivered_order_count, SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) as not_picked_up_order_count, COALESCE(SUM(total_amount), 0) as total_spent_amount',
+                [OrderStatusEnum::DELIVERED->value, OrderStatusEnum::RETURN_TO_ORIGIN->value],
+            )
             ->groupBy('user_id')
             ->get();
 

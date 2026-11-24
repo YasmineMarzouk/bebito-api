@@ -6,11 +6,44 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\Catalog\Models\Category;
 use Modules\Catalog\Models\Collection;
 use Modules\Catalog\Models\Product;
+use Modules\Catalog\Enums\ProductStatusEnum;
+use Tests\Concerns\CreatesPackFixtures;
 use Tests\TestCase;
 
 class ShopCatalogTest extends TestCase
 {
     use RefreshDatabase;
+    use CreatesPackFixtures;
+
+    public function test_the_shop_catalog_endpoint_returns_categories_and_a_paginated_mixed_catalog(): void
+    {
+        $category = Category::query()->create(['is_active' => true]);
+        $productVariant = $this->createSellableVariant('SHOP-PRODUCT', 5, 10000);
+        $productVariant->product->categories()->attach($category);
+        $productVariant->product->translations()->create(['locale_code' => 'fr', 'name' => 'Shop product', 'slug' => 'shop-product']);
+        $secondVariant = $this->createSellableVariant('SHOP-PACK-COMPONENT', 5, 5000);
+        $pack = $this->createSellablePack('SHOP-PACK', 12000, [
+            ['variant' => $productVariant, 'quantity' => 1],
+            ['variant' => $secondVariant, 'quantity' => 1],
+        ])['pack'];
+        $pack->categories()->attach($category);
+
+        $this->getJson('/api/v1/shop?per_page=1')
+            ->assertOk()
+            ->assertJsonPath('data.categories.0.id', $category->id)
+            ->assertJsonPath('data.total', 3)
+            ->assertJsonPath('data.perPage', 1)
+            ->assertJsonPath('data.lastPage', 3)
+            ->assertJsonCount(1, 'data.items');
+
+        $productVariant->product->update(['discount_percentage' => 10]);
+        $pack->update(['compare_at_price_amount' => 15000]);
+
+        $this->getJson('/api/v1/shop?discounted=1')
+            ->assertOk()
+            ->assertJsonPath('data.total', 2)
+            ->assertJsonCount(2, 'data.items');
+    }
 
     public function test_the_public_shop_category_endpoint_lists_only_active_categories(): void
     {
@@ -26,8 +59,8 @@ class ShopCatalogTest extends TestCase
 
     public function test_the_public_shop_product_endpoint_lists_only_published_products(): void
     {
-        $publishedProduct = $this->product('published');
-        $draftProduct = $this->product('draft');
+        $publishedProduct = $this->product(ProductStatusEnum::Published);
+        $draftProduct = $this->product(ProductStatusEnum::Draft);
 
         $this->getJson('/api/v1/shop/products')
             ->assertOk()
@@ -52,8 +85,8 @@ class ShopCatalogTest extends TestCase
     public function test_the_public_shop_product_endpoint_can_filter_by_collection(): void
     {
         $collection = $this->collection(1);
-        $productInCollection = $this->product('published');
-        $productOutsideCollection = $this->product('published');
+        $productInCollection = $this->product(ProductStatusEnum::Published);
+        $productOutsideCollection = $this->product(ProductStatusEnum::Published);
         $productInCollection->collections()->attach($collection);
 
         $this->getJson('/api/v1/shop/products?collection_id='.$collection->id)
@@ -65,8 +98,8 @@ class ShopCatalogTest extends TestCase
 
     public function test_the_public_shop_product_detail_endpoint_returns_a_published_product_by_id(): void
     {
-        $publishedProduct = $this->product('published');
-        $draftProduct = $this->product('draft');
+        $publishedProduct = $this->product(ProductStatusEnum::Published);
+        $draftProduct = $this->product(ProductStatusEnum::Draft);
 
         $this->getJson('/api/v1/shop/products/'.$publishedProduct->id)
             ->assertOk()
@@ -79,13 +112,13 @@ class ShopCatalogTest extends TestCase
     public function test_the_public_shop_product_endpoint_can_list_only_discounted_products(): void
     {
         $discountedProduct = Product::query()->create([
-            'status' => 'published',
+            'status' => ProductStatusEnum::Published->value,
             'price_amount' => 1000,
             'discount_percentage' => 15,
             'stock_quantity' => 10,
             'low_stock_threshold' => 3,
         ]);
-        $fullPriceProduct = $this->product('published');
+        $fullPriceProduct = $this->product(ProductStatusEnum::Published);
 
         $this->getJson('/api/v1/shop/products?discounted=1')
             ->assertOk()
@@ -94,10 +127,32 @@ class ShopCatalogTest extends TestCase
             ->assertJsonMissing(['id' => $fullPriceProduct->id]);
     }
 
-    private function product(string $status): Product
+    public function test_public_catalog_counts_and_product_categories_exclude_unpublished_and_inactive_data(): void
+    {
+        $activeCategory = Category::query()->create(['is_active' => true]);
+        $inactiveCategory = Category::query()->create(['is_active' => false]);
+        $publishedProduct = $this->product(ProductStatusEnum::Published);
+        $draftProduct = $this->product(ProductStatusEnum::Draft);
+        $publishedProduct->categories()->attach([$activeCategory->id, $inactiveCategory->id]);
+        $draftProduct->categories()->attach($activeCategory);
+
+        $this->getJson('/api/v1/shop/categories')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $activeCategory->id)
+            ->assertJsonPath('data.0.productCount', 1);
+
+        $this->getJson('/api/v1/shop/products')
+            ->assertOk()
+            ->assertJsonPath('data.0.id', $publishedProduct->id)
+            ->assertJsonCount(1, 'data.0.categories')
+            ->assertJsonPath('data.0.categories.0.id', $activeCategory->id);
+    }
+
+    private function product(ProductStatusEnum $status): Product
     {
         return Product::query()->create([
-            'status' => $status,
+            'status' => $status->value,
             'price_amount' => 1000,
             'stock_quantity' => 10,
             'low_stock_threshold' => 3,

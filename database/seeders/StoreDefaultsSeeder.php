@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -24,7 +23,12 @@ class StoreDefaultsSeeder extends Seeder
         ], ['code'], ['name', 'symbol', 'decimal_places', 'is_active']);
 
         DB::table('countries')->upsert([['code' => 'TN', 'name' => 'Tunisia', 'is_active' => true]], ['code'], ['name', 'is_active']);
-        DB::table('roles')->upsert(collect(['owner', 'admin', 'editor', 'support'])->map(fn (string $name) => ['name' => $name])->all(), ['name']);
+        DB::table('roles')->upsert([
+            ['name' => 'owner', 'title' => 'Owner'],
+            ['name' => 'admin', 'title' => 'Admin'],
+            ['name' => 'editor', 'title' => 'Editor'],
+            ['name' => 'support', 'title' => 'Support'],
+        ], ['name'], ['title']);
 
         DB::table('settings')->upsert([
             ['group' => 'store', 'key' => 'default_currency', 'value' => json_encode('TND')],

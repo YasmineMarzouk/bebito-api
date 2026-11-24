@@ -3,6 +3,7 @@
 namespace Modules\Catalog\DTOs\Inputs;
 
 use Illuminate\Http\UploadedFile;
+use Modules\Catalog\Enums\ProductStatusEnum;
 
 final readonly class CreateProductInput
 {
@@ -15,8 +16,8 @@ final readonly class CreateProductInput
      * @param  array<int, UploadedFile>  $images
      */
     public function __construct(
-        public string $status,
-        public ?string $gender,
+        public int $status,
+        public ?int $gender,
         public array $translations,
         public int $priceAmount,
         public ?int $compareAtPriceAmount,
@@ -28,15 +29,14 @@ final readonly class CreateProductInput
         public array $tags,
         public array $variants,
         public array $images,
-        public ?int $primaryImageIndex,
     ) {}
 
     /** @param array<string, mixed> $data */
     public static function from(array $data): self
     {
         return new self(
-            status: (string) ($data['status'] ?? 'draft'),
-            gender: $data['gender'] ?? null,
+            status: (int) ($data['status'] ?? ProductStatusEnum::Draft->value),
+            gender: array_key_exists('gender', $data) && $data['gender'] !== null ? (int) $data['gender'] : null,
             translations: array_map(ProductTranslationInput::from(...), $data['translations']),
             priceAmount: (int) $data['price_amount'],
             compareAtPriceAmount: array_key_exists('compare_at_price_amount', $data) && $data['compare_at_price_amount'] !== null ? (int) $data['compare_at_price_amount'] : null,
@@ -48,7 +48,6 @@ final readonly class CreateProductInput
             tags: array_values($data['tags'] ?? []),
             variants: array_map(ProductVariantInput::from(...), $data['variants'] ?? []),
             images: $data['images'] ?? [],
-            primaryImageIndex: array_key_exists('primary_image_index', $data) && $data['primary_image_index'] !== null ? (int) $data['primary_image_index'] : null,
         );
     }
 }

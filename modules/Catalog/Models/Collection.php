@@ -22,9 +22,14 @@ class Collection extends BaseModel
         return $this->belongsToMany(Product::class)->using(CollectionProduct::class)->withPivot('sort_order')->withTimestamps();
     }
 
+    public function packs(): BelongsToMany
+    {
+        return $this->belongsToMany(Pack::class)->using(CollectionPack::class)->withPivot('sort_order')->withTimestamps();
+    }
+
     public function primaryAsset(): MorphOne
     {
-        return $this->morphOne(Asset::class, 'resource')->where('is_primary', true);
+        return $this->morphOne(Asset::class, 'resource')->where('primary_image', true);
     }
 
     public function getMorphClass(): string

@@ -2,11 +2,13 @@
 
 namespace Modules\Promotions\DTOs\Inputs;
 
+use Modules\Promotions\Enums\CouponTypeEnum;
+
 final readonly class UpdateCouponInput
 {
     public function __construct(
         public string $code,
-        public string $type,
+        public CouponTypeEnum $type,
         public ?int $percentage,
         public ?int $fixedAmount,
         public int $minOrderAmount,

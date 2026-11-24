@@ -12,7 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('inventory_movements', function (Blueprint $table) {
-            $table->id(); $table->foreignId('inventory_item_id')->constrained()->cascadeOnDelete(); $table->integer('quantity_change'); $table->string('reason'); $table->nullableMorphs('reference'); $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete(); $table->text('note')->nullable();
+            $table->id();
+            $table->foreignId('inventory_item_id')->constrained()->cascadeOnDelete();
+            $table->integer('quantity_change');
+            $table->unsignedTinyInteger('reason');
+            $table->nullableMorphs('reference');
+            $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
+            $table->text('note')->nullable();
             $table->timestamps();
         });
     }

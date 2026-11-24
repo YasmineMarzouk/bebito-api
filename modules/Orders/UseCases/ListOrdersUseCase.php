@@ -4,14 +4,16 @@ namespace Modules\Orders\UseCases;
 
 use Modules\Orders\Contracts\Repositories\OrderRepositoryInterface;
 use Modules\Orders\DTOs\Outputs\OrderListOutput;
+use Modules\Core\DTOs\Outputs\PaginatedOutput;
 
 final class ListOrdersUseCase
 {
     public function __construct(private readonly OrderRepositoryInterface $orders) {}
 
-    /** @return array<int, OrderListOutput> */
-    public function execute(?int $customerId = null): array
+    public function execute(?int $customerId, int $perPage, int $page): PaginatedOutput
     {
-        return $this->orders->all($customerId)->map(OrderListOutput::fromModel(...))->all();
+        $orders = $this->orders->paginateForAdmin($customerId, $perPage, $page);
+
+        return new PaginatedOutput($orders->getCollection()->map(OrderListOutput::fromModel(...))->all(), $orders->currentPage(), $orders->lastPage(), $orders->perPage(), $orders->total());
     }
 }

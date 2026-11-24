@@ -14,7 +14,7 @@ final class CreateCheckoutController extends BaseController
     public function __invoke(CreateCheckoutRequest $request, CreateCheckoutUseCase $useCase): JsonResponse
     {
         return $this->makeSuccess('Order created.', CheckoutOrderOutput::fromModel(
-            $useCase->execute($request->user()?->id, CreateCheckoutInput::from($request->validated())),
+            $useCase->execute($request->user('customer')?->id, CreateCheckoutInput::from($request->validated())),
         ), 201);
     }
 }

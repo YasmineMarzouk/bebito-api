@@ -10,6 +10,6 @@ final readonly class StoreAssetInput
         public string $directory,
         public string $disk = 'public',
         public int $sortOrder = 0,
-        public bool $isPrimary = false,
+        public bool $primaryImage = false,
     ) {}
 }

@@ -12,7 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('homepage_sections', function (Blueprint $table) {
-            $table->id(); $table->string('locale_code',5); $table->string('key'); $table->string('type'); $table->json('content'); $table->unsignedSmallInteger('sort_order')->default(0); $table->boolean('is_active')->default(true); $table->unique(['locale_code','key']);
+            $table->id();
+            $table->string('locale_code', 5);
+            $table->string('key');
+            $table->string('type');
+            $table->json('content');
+            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->unique(['locale_code', 'key']);
             $table->timestamps();
         });
     }
