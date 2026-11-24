@@ -21,7 +21,6 @@ return new class extends Migration
             $table->string('mime_type', 100)->nullable();
             $table->unsignedBigInteger('size')->nullable();
             $table->unsignedSmallInteger('sort_order')->default(0);
-            $table->boolean('is_primary')->default(false);
             $table->index(['resource_type', 'resource_id']);
             $table->timestamps();
         });

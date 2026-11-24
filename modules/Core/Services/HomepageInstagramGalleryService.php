@@ -42,17 +42,24 @@ final readonly class HomepageInstagramGalleryService
     /** @param array<int, UploadedFile> $images @return array{instagramUrl: ?string, images: array<int, array{id: int, position: int, url: string}>} */
     public function replace(array $images): array
     {
-        DB::transaction(function () use ($images): void {
+        $replacedAssets = DB::transaction(function () use ($images): Collection {
             $existingAssets = Asset::query()
                 ->where('resource_type', self::ResourceType)
                 ->where('resource_id', self::ResourceId)
                 ->lockForUpdate()
                 ->get()
                 ->groupBy('sort_order');
+            $replacedAssets = collect($existingAssets->all())
+                ->only(array_map('intval', array_keys($images)))
+                ->flatten()
+                ->values();
+
+            $replacedAssets->each(fn (Asset $asset): bool => $asset->delete());
 
             foreach ($images as $position => $image) {
                 $position = (int) $position;
-                $asset = $this->files->store($image, new StoreAssetInput(
+
+                $this->files->store($image, new StoreAssetInput(
                     self::ResourceType,
                     self::ResourceId,
                     'homepage/instagram',
@@ -60,12 +67,12 @@ final readonly class HomepageInstagramGalleryService
                     $position,
                     $position === 0,
                 ));
-
-                $existingAssets->get($position, collect())
-                    ->filter(fn (Asset $existing): bool => $existing->id !== $asset->id)
-                    ->each(fn (Asset $existing): mixed => $this->files->delete($existing));
             }
+
+            return $replacedAssets;
         });
+
+        $replacedAssets->each(fn (Asset $asset): mixed => $this->files->delete($asset));
 
         return $this->list();
     }

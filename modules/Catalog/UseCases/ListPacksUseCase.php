@@ -11,9 +11,9 @@ final readonly class ListPacksUseCase
 {
     public function __construct(private PackRepositoryInterface $packs, private PackAvailabilityServiceInterface $availability) {}
 
-    public function execute(int $perPage, int $page): PaginatedOutput
+    public function execute(int $perPage, int $page, ?string $search = null): PaginatedOutput
     {
-        $packs = $this->packs->paginate($perPage, $page);
+        $packs = $this->packs->paginate($perPage, $page, $search);
 
         return new PaginatedOutput($packs->getCollection()
             ->map(fn ($pack): PackOutput => PackOutput::fromModel($pack, $this->availability->for($pack)))

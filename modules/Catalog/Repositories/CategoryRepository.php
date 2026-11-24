@@ -28,11 +28,12 @@ final class CategoryRepository implements CategoryRepositoryInterface
     public function homepage(): Collection
     {
         return Category::query()
+            ->select('categories.*')
+            ->join('main_categories', 'main_categories.category_id', '=', 'categories.id')
             ->with(['translations', 'primaryAsset'])
             ->withCount(['products' => fn ($query) => $query->where('status', ProductStatusEnum::Published->value)])
             ->where('is_active', true)
-            ->orderBy('id')
-            ->limit(6)
+            ->orderBy('main_categories.position')
             ->get();
     }
 
@@ -72,7 +73,7 @@ final class CategoryRepository implements CategoryRepositoryInterface
             $category->update([
                 'is_active' => $input->isActive,
             ]);
-            //$this->storeTranslations($category, $input->translations);
+            // $this->storeTranslations($category, $input->translations);
 
             return $this->find($category->id) ?? $category;
         });

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Modules\Catalog\DTOs\Inputs\CreateProductInput;
 use Modules\Catalog\DTOs\Inputs\UpdateProductInput;
+use Modules\Catalog\Enums\ProductStatusEnum;
 use Modules\Catalog\Models\Product;
 use Modules\Core\Models\Asset;
 
@@ -15,7 +16,7 @@ interface ProductRepositoryInterface
     public function all(): Collection;
 
     /** @return LengthAwarePaginator<int, Product> */
-    public function paginate(int $perPage, int $page): LengthAwarePaginator;
+    public function paginate(int $perPage, int $page, ?string $search = null): LengthAwarePaginator;
 
     /** @return Collection<int, Product> */
     public function homepage(): Collection;
@@ -49,6 +50,8 @@ interface ProductRepositoryInterface
     public function create(CreateProductInput $input, ?int $userId = null): Product;
 
     public function update(Product $product, UpdateProductInput $input, array $translations, ?int $userId = null): Product;
+
+    public function updateStatus(Product $product, ProductStatusEnum $status): Product;
 
     public function delete(Product $product): void;
 }

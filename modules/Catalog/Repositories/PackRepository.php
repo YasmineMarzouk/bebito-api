@@ -3,6 +3,7 @@
 namespace Modules\Catalog\Repositories;
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Modules\Catalog\Contracts\Repositories\PackRepositoryInterface;
@@ -25,9 +26,19 @@ final class PackRepository implements PackRepositoryInterface
         return Pack::query()->with($this->relations())->latest('id')->get();
     }
 
-    public function paginate(int $perPage, int $page): LengthAwarePaginator
+    public function paginate(int $perPage, int $page, ?string $search = null): LengthAwarePaginator
     {
-        return Pack::query()->with($this->relations())->latest('id')->paginate($perPage, ['*'], 'page', $page);
+        return Pack::query()
+            ->with($this->relations())
+            ->when($search !== null && $search !== '', function (Builder $query) use ($search): void {
+                $query->where(function (Builder $packs) use ($search): void {
+                    $packs
+                        ->where('sku', 'like', '%'.$search.'%')
+                        ->orWhereHas('translations', fn (Builder $translations): Builder => $translations->where('name', 'like', '%'.$search.'%'));
+                });
+            })
+            ->latest('id')
+            ->paginate($perPage, ['*'], 'page', $page);
     }
 
     public function shop(): Collection
@@ -215,7 +226,7 @@ final class PackRepository implements PackRepositoryInterface
     /** @return array<int, string> */
     private function relations(): array
     {
-        return ['translations', 'variants.componentVariantMappings.productVariant.inventoryItem', 'variants.componentVariantMappings.productVariant.product', 'variants.componentVariantMappings.packComponent', 'components.product', 'assets', 'categories.translations', 'collections.translations', 'tags'];
+        return ['translations', 'variants.componentVariantMappings.productVariant.inventoryItem', 'variants.componentVariantMappings.productVariant.product', 'variants.componentVariantMappings.packComponent', 'components.product.translations', 'assets', 'categories.translations', 'collections.translations', 'tags'];
     }
 
     /** @return array<int|string, string|\Closure> */
@@ -226,7 +237,7 @@ final class PackRepository implements PackRepositoryInterface
             'variants.componentVariantMappings.productVariant.inventoryItem',
             'variants.componentVariantMappings.productVariant.product',
             'variants.componentVariantMappings.packComponent',
-            'components.product',
+            'components.product.translations',
             'assets',
             'categories' => fn ($query) => $query->where('is_active', true)->with('translations'),
             'collections' => fn ($query) => $query->where('is_active', true)->with('translations'),

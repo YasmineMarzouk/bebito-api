@@ -2,6 +2,7 @@
 
 namespace Modules\Catalog\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
@@ -17,6 +18,11 @@ class Category extends BaseModel
     public function translations(): HasMany
     {
         return $this->hasMany(CategoryTranslation::class);
+    }
+
+    public function mainCategories(): HasMany
+    {
+        return $this->hasMany(MainCategory::class);
     }
 
     public function products(): BelongsToMany
@@ -37,5 +43,13 @@ class Category extends BaseModel
     public function getMorphClass(): string
     {
         return 'category';
+    }
+
+    /** @return \Closure(BelongsTo<Category, MainCategory>): void */
+    public static function categoryDetails(): \Closure
+    {
+        return function (BelongsTo $query): void {
+            $query->with(['translations', 'primaryAsset'])->withCount('products');
+        };
     }
 }

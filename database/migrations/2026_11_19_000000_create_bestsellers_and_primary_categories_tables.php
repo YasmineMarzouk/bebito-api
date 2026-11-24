@@ -15,19 +15,10 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
-
-        Schema::create('primary_categories', function (Blueprint $table): void {
-            $table->id();
-            $table->foreignId('category_id')->constrained()->cascadeOnDelete();
-            $table->unsignedTinyInteger('position')->unique();
-            $table->timestamps();
-            $table->softDeletes();
-        });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('primary_categories');
         Schema::dropIfExists('bestsellers');
     }
 };

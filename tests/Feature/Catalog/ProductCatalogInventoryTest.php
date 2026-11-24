@@ -9,6 +9,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
+use Modules\Catalog\Enums\ProductGenderEnum;
+use Modules\Catalog\Enums\ProductStatusEnum;
 use Modules\Catalog\Models\Category;
 use Modules\Catalog\Models\Product;
 use Modules\Catalog\Models\ProductVariant;
@@ -90,6 +92,33 @@ class ProductCatalogInventoryTest extends TestCase
             ->assertJsonPath('data.lastPage', 1)
             ->assertJsonPath('data.perPage', 1)
             ->assertJsonPath('data.total', 1);
+    }
+
+    public function test_staff_can_search_products_and_update_a_product_status(): void
+    {
+        $staff = $this->staff();
+        $matchingProduct = $this->productWithVariants([1]);
+        $matchingProduct->translations()->update(['name' => 'Moonlight bodysuit']);
+        $this->productWithVariants([1]);
+
+        $this->actingAs($staff, 'admin')
+            ->getJson('/api/v1/admin/products?search=Moonlight&per_page=1')
+            ->assertOk()
+            ->assertJsonCount(1, 'data.items')
+            ->assertJsonPath('data.items.0.id', $matchingProduct->id)
+            ->assertJsonPath('data.perPage', 1);
+
+        $this->actingAs($staff, 'admin')
+            ->patchJson('/api/v1/admin/products/'.$matchingProduct->id.'/status', ['status' => ProductStatusEnum::Draft->value])
+            ->assertOk()
+            ->assertJsonPath('data.status', ProductStatusEnum::Draft->value);
+
+        $this->assertDatabaseHas('products', ['id' => $matchingProduct->id, 'status' => ProductStatusEnum::Draft->value]);
+
+        $this->actingAs($staff, 'admin')
+            ->patchJson('/api/v1/admin/products/'.$matchingProduct->id.'/status', ['status' => 99])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['status']);
     }
 
     public function test_product_update_preserves_variant_identity_derives_stock_and_records_adjustments(): void
@@ -393,7 +422,7 @@ class ProductCatalogInventoryTest extends TestCase
     {
         return [
             'status' => ProductStatusEnum::Published->value,
-            'gender' => \Modules\Catalog\Enums\ProductGenderEnum::Unisex->value,
+            'gender' => ProductGenderEnum::Unisex->value,
             'translations' => [
                 ['locale_code' => 'fr', 'name' => 'Test product', 'slug' => 'test-product', 'short_description' => null, 'description' => null],
             ],

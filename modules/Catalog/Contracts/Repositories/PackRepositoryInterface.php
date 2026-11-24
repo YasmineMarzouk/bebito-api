@@ -16,7 +16,7 @@ interface PackRepositoryInterface
     public function all(): Collection;
 
     /** @return LengthAwarePaginator<int, Pack> */
-    public function paginate(int $perPage, int $page): LengthAwarePaginator;
+    public function paginate(int $perPage, int $page, ?string $search = null): LengthAwarePaginator;
 
     /** @return Collection<int, Pack> */
     public function shop(): Collection;

@@ -10,9 +10,9 @@ final readonly class ListProductsUseCase
 {
     public function __construct(private ProductRepositoryInterface $products) {}
 
-    public function execute(int $perPage, int $page): PaginatedOutput
+    public function execute(int $perPage, int $page, ?string $search = null): PaginatedOutput
     {
-        $products = $this->products->paginate($perPage, $page);
+        $products = $this->products->paginate($perPage, $page, $search);
 
         return new PaginatedOutput($products->getCollection()->map(ProductOutput::fromModel(...))->all(), $products->currentPage(), $products->lastPage(), $products->perPage(), $products->total());
     }

@@ -2,11 +2,12 @@
 
 namespace Modules\Catalog\Repositories;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Modules\Catalog\Contracts\Repositories\ProductRepositoryInterface;
 use Modules\Catalog\Contracts\Repositories\PackRepositoryInterface;
+use Modules\Catalog\Contracts\Repositories\ProductRepositoryInterface;
 use Modules\Catalog\DTOs\Inputs\CreateProductInput;
 use Modules\Catalog\DTOs\Inputs\ProductTranslationInput;
 use Modules\Catalog\DTOs\Inputs\ProductVariantInput;
@@ -19,9 +20,9 @@ use Modules\Catalog\Models\ProductVariant;
 use Modules\Catalog\Models\Size;
 use Modules\Catalog\Models\Tag;
 use Modules\Core\Models\Asset;
+use Modules\Core\Support\RichText;
 use Modules\Inventory\Contracts\Repositories\InventoryMovementRepositoryInterface;
 use Modules\Inventory\Enums\InventoryMovementReasonEnum;
-use Modules\Core\Support\RichText;
 
 final class ProductRepository implements ProductRepositoryInterface
 {
@@ -35,18 +36,29 @@ final class ProductRepository implements ProductRepositoryInterface
         return Product::query()->with($this->relations())->latest('id')->get();
     }
 
-    public function paginate(int $perPage, int $page): LengthAwarePaginator
+    public function paginate(int $perPage, int $page, ?string $search = null): LengthAwarePaginator
     {
-        return Product::query()->with($this->relations())->latest('id')->paginate($perPage, ['*'], 'page', $page);
+        return Product::query()
+            ->with($this->relations())
+            ->when($search !== null && $search !== '', function (Builder $query) use ($search): void {
+                $query->where(function (Builder $products) use ($search): void {
+                    $products
+                        ->where('sku', 'like', '%'.$search.'%')
+                        ->orWhereHas('translations', fn (Builder $translations): Builder => $translations->where('name', 'like', '%'.$search.'%'));
+                });
+            })
+            ->latest('id')
+            ->paginate($perPage, ['*'], 'page', $page);
     }
 
     public function homepage(): Collection
     {
         return Product::query()
+            ->select('products.*')
+            ->join('bestsellers', 'bestsellers.product_id', '=', 'products.id')
             ->with($this->publicRelations())
             ->where('status', ProductStatusEnum::Published->value)
-            ->latest('id')
-            ->limit(4)
+            ->orderBy('bestsellers.position')
             ->get();
     }
 
@@ -210,6 +222,16 @@ final class ProductRepository implements ProductRepositoryInterface
             $this->packs->refreshCompareAtPricesForProduct($product->id);
 
             return $this->find($product->id) ?? $product;
+        });
+    }
+
+    public function updateStatus(Product $product, ProductStatusEnum $status): Product
+    {
+        return DB::transaction(function () use ($product, $status): Product {
+            $storedProduct = Product::query()->lockForUpdate()->findOrFail($product->id);
+            $storedProduct->update(['status' => $status->value]);
+
+            return $this->find($storedProduct->id) ?? $storedProduct;
         });
     }
 

@@ -3,16 +3,21 @@
 namespace Modules\Catalog\Http\Controllers\V1\Products;
 
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Modules\Catalog\Http\Requests\ListProductsRequest;
 use Modules\Catalog\UseCases\ListProductsUseCase;
 use Modules\Core\Http\Controllers\BaseController;
 
 final class ListProductsController extends BaseController
 {
-    public function __invoke(Request $request, ListProductsUseCase $useCase): JsonResponse
+    public function __invoke(ListProductsRequest $request, ListProductsUseCase $useCase): JsonResponse
     {
-        return $this->makeSuccess('Products retrieved.', $useCase->execute(10, $this->page($request)));
-    }
+        $data = $request->validated();
+        $search = trim((string) ($data['search'] ?? ''));
 
-    private function page(Request $request): int { return max(1, (int) $request->query('page', 1)); }
+        return $this->makeSuccess('Products retrieved.', $useCase->execute(
+            (int) ($data['per_page'] ?? 20),
+            (int) ($data['page'] ?? 1),
+            $search === '' ? null : $search,
+        ));
+    }
 }

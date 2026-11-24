@@ -79,6 +79,11 @@ class Product extends BaseModel
         return $this->hasMany(PackComponent::class);
     }
 
+    public function bestsellers(): HasMany
+    {
+        return $this->hasMany(Bestseller::class);
+    }
+
     public function getMorphClass(): string
     {
         return 'product';

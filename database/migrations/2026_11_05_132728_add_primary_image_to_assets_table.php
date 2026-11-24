@@ -12,11 +12,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('assets', function (Blueprint $table): void {
-            $table->boolean('primary_image')->nullable()->after('is_primary');
+        $hasLegacyPrimaryImage = Schema::hasColumn('assets', 'is_primary');
+
+        Schema::table('assets', function (Blueprint $table) use ($hasLegacyPrimaryImage): void {
+            $primaryImage = $table->boolean('primary_image')->nullable();
+
+            if ($hasLegacyPrimaryImage) {
+                $primaryImage->after('is_primary');
+            }
         });
 
-        DB::table('assets')->update(['primary_image' => DB::raw('is_primary')]);
+        if ($hasLegacyPrimaryImage) {
+            DB::table('assets')->update(['primary_image' => DB::raw('is_primary')]);
+        }
 
         DB::table('assets')
             ->select('resource_type', 'resource_id')
